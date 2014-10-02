@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ant-ivy-buildfile-sample" default="compile" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:jacoco="antlib:org.jacoco.ant">
+
+    <!-- Property definition -->
+    <property file="${basedir}/build.properties"/>
+
+    <!-- Path setting -->
+    <path id="lib.path">
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    </path>
+
+    <!-- Clean up -->
+    <target name="clean" description="Clean up.">
+        <delete dir="${target.dir}"/>
+    </target>
+
+    <!-- Resolve dependencies in Ivy -->
+    <target name="resolve" description="Resolve dependencies in Ivy.">
+        <ivy:resolve/>
+        <ivy:retrieve pattern="${ivy.lib.dir}/[conf]/[artifact]-[revision].[ext]" conf="default" pathid="lib.default.path"/>
+        <ivy:retrieve pattern="${ivy.lib.dir}/[conf]/[artifact]-[revision].[ext]" conf="compile" pathid="lib.compile.path"/>
+        <ivy:retrieve pattern="${ivy.lib.dir}/[conf]/[artifact]-[revision].[ext]" conf="runtime" pathid="lib.runtime.path"/>
+        <ivy:retrieve pattern="${ivy.lib.dir}/[conf]/[artifact]-[revision].[ext]" conf="test" pathid="lib.test.path"/>
+    </target>
+
+    <!--
+        Compile
+    -->
+
+    <!-- Compile the source code -->
+    <target name="compile" depends="clean,resolve" description="Compile the source code.">
+        <mkdir dir="${target.dir}"/>
+        <mkdir dir="${classes.dir}"/>
+        <javac destdir="${classes.dir}" source="${java.source.version}" encoding="${encoding.source}" includeantruntime="false">
+            <src path="${src.main.java.dir}"/>
+            <src path="${src.main.resources.dir}"/>
+            <classpath refid="lib.compile.path"/>
+        </javac>
+    </target>
+
+    <!-- Compile the test code -->
+    <target name="test-compile" depends="compile" description="Compile the test code.">
+        <mkdir dir="${target.dir}"/>
+        <mkdir dir="${test.classes.dir}"/>
+        <javac destdir="${test.classes.dir}" source="${java.source.version}" encoding="${encoding.source}" includeantruntime="false">
+            <src path="${src.test.java.dir}"/>
+            <src path="${src.test.resources.dir}"/>
+            <classpath path="${classes.dir}"/>
+            <classpath refid="lib.compile.path"/>
+            <classpath refid="lib.test.path"/>
+        </javac>
+    </target>
+
+    <!--
+        Test
+    -->
+
+    <!-- Run the unit tests -->
+    <target name="test" depends="test-compile" description="Run the unit tests.">
+        <mkdir dir="${junit.dir}"/>
+        <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml" classpathref="lib.path"/>
+        <jacoco:coverage destfile="${jacoco.dir}/jacoco.exec">
+            <junit printsummary="true" fork="true" forkmode="once" haltonfailure="false">
+                <formatter type="xml"/>
+                <classpath>
+                    <path refid="lib.compile.path"/>
+                    <path refid="lib.test.path"/>
+                    <pathelement location="${classes.dir}"/>
+                    <pathelement location="${test.classes.dir}"/>
+                </classpath>
+                <batchtest todir="${junit.dir}">
+                    <fileset dir="${test.classes.dir}" includes="**/*Test.class"/>
+                </batchtest>
+            </junit>
+        </jacoco:coverage>
+    </target>
+
+    <!--
+        Report
+    -->
+
+    <!-- Create a report of Ivy -->
+    <target name="ivy-report" depends="resolve" description="Create a report of Ivy.">
+        <mkdir dir="${report.ivy.dir}"/>
+        <ivy:report todir="${report.ivy.dir}" graph="true"/>
+    </target>
+
+    <!-- Create a report of JavaNCSS -->
+    <target name="javancss" depends="compile" description="Create a report of JavaNCSS.">
+        <mkdir dir="${report.dir}"/>
+        <mkdir dir="${report.javancss.dir}"/>
+        <taskdef name="javancss" classname="javancss.JavancssAntTask" classpathref="lib.path"/>
+        <javancss srcdir="${src.main.java.dir}" generateReport="true"
+            outputfile="${report.javancss.dir}/javancss-metrics.txt" format="plain" includes="**/*.java"/>
+    </target>
+
+    <!-- Create a report of Checkstyle -->
+    <target name="checkstyle" depends="compile" description='Create a report of Checkstyle.'>
+        <mkdir dir="${report.checkstyle.dir}"/>
+        <taskdef resource="checkstyletask.properties" classpathref="lib.path"/>
+        <checkstyle config="${basedir}/checkstyle.xml">
+            <fileset dir="${src.main.java.dir}" includes="**/*.java"/>
+            <formatter type="xml" toFile="${report.checkstyle.dir}/checkstyle.xml"/>
+        </checkstyle>
+    </target>
+
+    <!-- Create a report of FindBugs -->
+    <target name="findbugs" depends="compile" description="Create a report of FindBugs.">
+        <mkdir dir="${report.dir}"/>
+        <mkdir dir="${report.findbugs.dir}"/>
+        <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask" classpathref="lib.path"/>
+        <findbugs output="${report.type}" outputFile="${report.findbugs.dir}/findbugs.${report.type}"
+                classpathref="lib.test.path" jvmargs="-Duser.language=en" pluginList="">
+            <auxclasspath refid="lib.runtime.path"/>
+            <sourcepath path="${src.main.java.dir}"/>
+            <class location="${classes.dir}"/>
+        </findbugs>
+    </target>
+
+    <!-- Create a report of PMD -->
+    <target name="pmd" depends="compile" description="Create a report of PMD.">
+        <mkdir dir="${report.dir}"/>
+        <mkdir dir="${report.pmd.dir}"/>
+        <taskdef name="pmd" classname="net.sourceforge.pmd.ant.PMDTask" classpathref="lib.path"/>
+        <pmd encoding="${encoding.source}" rulesetfiles="java-basic">
+            <sourceLanguage name="java" version="${java.source.version}"/>
+            <formatter type="${report.type}" toFile="${report.pmd.dir}/pmd.${report.type}" toConsole="true"/>
+            <fileset dir="${src.main.java.dir}">
+                <include name="**/*.java"/>
+            </fileset>
+        </pmd>
+    </target>
+
+    <!-- Create a report of JUnit -->
+    <target name="junit-report" depends="test" description="Create a report of JUnit.">
+        <mkdir dir="${report.dir}"/>
+        <mkdir dir="${report.junit.dir}"/>
+        <junitreport todir="${report.junit.dir}">
+            <fileset dir="${junit.dir}">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report format="frames" todir="${report.junit.dir}/html"/>
+        </junitreport>
+    </target>
+
+    <!-- Create a report of JaCoCo -->
+    <target name="jacoco" depends="test" description="Create a report of JaCoCo.">
+        <mkdir dir="${report.dir}"/>
+        <mkdir dir="${report.jacoco.dir}"/>
+        <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml" classpathref="lib.path"/>
+        <jacoco:report>
+            <executiondata>
+                <file file="${jacoco.dir}/jacoco.exec"/>
+            </executiondata>
+            <structure name="${artifact.name}">
+                <classfiles>
+                    <fileset dir="${classes.dir}"/>
+                </classfiles>
+                <sourcefiles encoding="${encoding.source}">
+                    <fileset dir="${src.main.java.dir}"/>
+                </sourcefiles>
+            </structure>
+            <html destdir="${report.jacoco.dir}"/>
+            <xml destfile="${report.jacoco.dir}/jacoco.xml" encoding="${encoding.source}"/>
+        </jacoco:report>
+    </target>
+
+    <!-- Create a report of all types -->
+    <target name="report" depends="ivy-report,javancss,checkstyle,findbugs,pmd,junit-report,jacoco"
+        description="Create a report of all types."/>
+
+    <!--
+        JavaDoc and jar
+    -->
+
+    <!-- Generate the JavaDoc -->
+    <target name="javadoc" depends="compile" description="Generate the JavaDoc.">
+        <mkdir dir="${javadoc.dir}"/>
+        <javadoc
+                sourcepath="${src.main.java.dir}" destdir="${javadoc.dir}"
+                encoding="${encoding.source}" docencoding="${encoding.output}" charset="${encoding.output}"
+                author="true" verbose="true" use="true" windowtitle="${artifact.name}"
+                additionalparam="-J-Dfile.encoding=${encoding.source}" useexternalfile="yes">
+            <classpath path="${classes.dir}"/>
+            <classpath refid="lib.compile.path"/>
+        </javadoc>
+    </target>
+
+    <!-- Generate the jar archive -->
+    <target name="jar" depends="compile" description="Generate the jar archive.">
+        <mkdir dir="${target.dir}"/>
+        <copy file="${basedir}/LICENSE" tofile="${classes.dir}/META-INF/LICENSE"/>
+        <jar jarfile="${target.dir}/${artifact.name}-${artifact.version}.jar" basedir="${classes.dir}">
+            <fileset dir="${src.main.resources.dir}" includes="**/*.properties"/>
+            <manifest>
+                <attribute name="Specification-Title" value="${artifact.name}"/>
+                <attribute name="Specification-Vendor" value="${artifact.vendor}"/>
+                <attribute name="Specification-Version" value="${artifact.version}"/>
+                <attribute name="Implementation-Title" value="${artifact.name}"/>
+                <attribute name="Implementation-Vendor" value="${artifact.vendor}"/>
+                <attribute name="Implementation-Version" value="${artifact.version}"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <!-- Generate the sources archive -->
+    <target name="sources-jar" depends="compile" description="Generate the sources archive.">
+        <mkdir dir="${target.dir}"/>
+        <jar jarfile="${target.dir}/${artifact.name}-${artifact.version}-sources.jar" basedir="${src.main.java.dir}"/>
+    </target>
+
+    <!-- Generate the javaDoc archive -->
+    <target name="javadoc-jar" depends="javadoc" description="Generate the javaDoc archive.">
+        <mkdir dir="${target.dir}"/>
+        <jar jarfile="${target.dir}/${artifact.name}-${artifact.version}-javadoc.jar" basedir="${javadoc.dir}"/>
+    </target>
+
+    <!-- Packaged into distribution format -->
+    <target name="package" depends="report,jar,sources-jar,javadoc-jar" description="Packaged into distribution format."/>
+
+</project>
