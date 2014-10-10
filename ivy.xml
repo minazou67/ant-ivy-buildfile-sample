@@ -11,11 +11,20 @@
   </configurations>
 
   <dependencies>
-    <!-- Compile -->
-    <dependency org="org.projectlombok" name="lombok" rev="1.12.6" conf="compile->default"/>
+    <!-- Logging -->
+    <dependency org="org.slf4j" name="slf4j-api" rev="1.7.7" conf="compile->default"/>
+    <dependency org="org.slf4j" name="slf4j-log4j12" rev="1.7.7" conf="runtime->default"/>
+    <dependency org="log4j" name="log4j" rev="1.2.17" conf="compile->default"/>
+
+    <!-- Apache Commons -->
+    <dependency org="org.apache.commons" name="commons-lang3" rev="3.3.2" conf="compile->default"/>
+    <dependency org="org.apache.commons" name="commons-collections4" rev="4.0" conf="compile->default"/>
 
     <!-- Test -->
     <dependency org="junit" name="junit" rev="4.11" conf="test->default"/>
+    <dependency org="org.mockito" name="mockito-all" rev="1.9.5" conf="test->default"/>
+
+    <!-- Reporting -->
     <dependency org="org.jacoco" name="org.jacoco.ant" rev="0.7.2.201409121644" conf="test->default"/>
     <dependency org="org.codehaus.javancss" name="javancss" rev="33.54" conf="test->default"/>
     <dependency org="com.puppycrawl.tools" name="checkstyle" rev="5.7" conf="test->default"/>
