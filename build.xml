@@ -109,7 +109,7 @@
         <mkdir dir="${report.dir}"/>
         <mkdir dir="${report.findbugs.dir}"/>
         <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask" classpathref="lib.path"/>
-        <findbugs output="${report.type}" outputFile="${report.findbugs.dir}/findbugs.${report.type}"
+        <findbugs effort="max" output="${report.type}" outputFile="${report.findbugs.dir}/findbugs.${report.type}"
                 classpathref="lib.test.path" jvmargs="-Duser.language=en" pluginList="">
             <auxclasspath refid="lib.runtime.path"/>
             <sourcepath path="${src.main.java.dir}"/>
