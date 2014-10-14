@@ -13,8 +13,7 @@
   <dependencies>
     <!-- Logging -->
     <dependency org="org.slf4j" name="slf4j-api" rev="1.7.7" conf="compile->default"/>
-    <dependency org="org.slf4j" name="slf4j-log4j12" rev="1.7.7" conf="runtime->default"/>
-    <dependency org="log4j" name="log4j" rev="1.2.17" conf="compile->default"/>
+    <dependency org="org.slf4j" name="slf4j-nop" rev="1.7.7" conf="compile->default"/>
 
     <!-- Apache Commons -->
     <dependency org="org.apache.commons" name="commons-lang3" rev="3.3.2" conf="compile->default"/>
