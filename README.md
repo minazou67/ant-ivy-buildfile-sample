@@ -1,4 +1,4 @@
-Ant-Ivy build file sample
+Ant-Ivy build file samples
 ========================
 
 This is a sample of the build file using ant and ivy.
