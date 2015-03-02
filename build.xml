@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="ant-ivy-buildfile-sample" default="compile" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:jacoco="antlib:org.jacoco.ant">
+<project name="ant-ivy-buildfile-samples" default="compile" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:jacoco="antlib:org.jacoco.ant">
 
     <!-- Property definition -->
     <property file="${basedir}/build.properties"/>
@@ -110,7 +110,8 @@
         <mkdir dir="${report.findbugs.dir}"/>
         <taskdef name="findbugs" classname="edu.umd.cs.findbugs.anttask.FindBugsTask" classpathref="lib.path"/>
         <findbugs effort="max" output="${report.type}" outputFile="${report.findbugs.dir}/findbugs.${report.type}"
-                classpathref="lib.test.path" jvmargs="-Duser.language=en" pluginList="">
+                classpathref="lib.test.path" excludefilter="${basedir}/findbugs-exclude.xml"
+                jvmargs="-Duser.language=en" pluginList="">
             <auxclasspath refid="lib.runtime.path"/>
             <sourcepath path="${src.main.java.dir}"/>
             <class location="${classes.dir}"/>
