@@ -98,7 +98,7 @@
     <target name="checkstyle" depends="compile" description='Create a report of Checkstyle.'>
         <mkdir dir="${report.checkstyle.dir}"/>
         <taskdef resource="checkstyletask.properties" classpathref="lib.path"/>
-        <checkstyle config="${basedir}/checkstyle.xml">
+        <checkstyle config="${basedir}/checkstyle-checker.xml">
             <fileset dir="${src.main.java.dir}" includes="**/*.java"/>
             <formatter type="xml" toFile="${report.checkstyle.dir}/checkstyle.xml"/>
         </checkstyle>
